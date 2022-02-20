@@ -1,2 +1,3 @@
 # Explanatory Data Analysis - Terrorism
 In this project, we perform an explanatory data analysis on a global terrorism. The dataset contains crimes that took place from 1970 to 2017 all over the world. During the process, we explored the data structure & content, manipulated and analyzed it using R and R-Studio. Finally, we visualized the cleaned dataset by creating an informative & interactive two-page dashboard using Power BI and an HTML report of the analysis.
+Check the explanation video through: https://www.linkedin.com/posts/ahmed-ay-yasser_gripfeb22-internship-task2-activity-6901237603769688064-Z-bl
