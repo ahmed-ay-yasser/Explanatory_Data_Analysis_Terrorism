@@ -1,0 +1,308 @@
+---
+title: "**Task 2 - Global Terrorism Analysis**"
+output: html_document
+header-includes:
+    - \usepackage{sectsty}
+    - \allsectionsfont{\color{cyan}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<style>
+#header{
+color: #720e07;
+font-size: 30px;
+background-color: #eecf6d;
+font-family: "Times New Roman";
+text-align: center;
+}
+h3{
+text-align: left;
+font-family: "Times New Roman";
+color:#720e07;
+}
+body{
+font-family: "Times New Roman";
+font-size: 20px;
+background-color: #ffffff;
+}
+h1,h2,h4{
+text-align: center;
+color: #720e07;
+}
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+.intro{
+color: #720e07;
+text-align: center;
+}
+.list{
+text-align: left
+}
+</style>
+
+
+
+
+<h3 class="intro"> **The Sparks Foundation** </h3>
+#### **Data Science & Business Analytics Internship - February 2022**
+#### **Ahmed Yasser Disoky Dar**
+
+<img src = logo.png style="width:300px;" class = "center">
+
+
+
+
+### **About the Dataset**
+
+The dataset **_Global Terrorism_** contains data about crimes that took place from **1970** to **2017** in **205** countries from all over the globe. The dataset consists of **181,691** rows and **135** columns. The objective of this report is to perform an Explanatory Data Analysis on this data, answer some business questions and find interesting facts. 
+
+
+<br>
+
+### **Importing The Necessary Libraries** 
+We import the relevant libraries for the analysis such as `library(gapminder)` & `library(dplyr)`.
+```{r include=FALSE}
+library(gapminder)
+library(dplyr)
+```
+
+<br>
+
+### **Loading the Dataset & Exploring the Structure and Content**
+```{r Loading Data, echo=TRUE}
+df <- read.csv("terrorism.csv", stringsAsFactors = TRUE)
+glimpse(df)
+```
+
+<br>
+
+Selecting only the columns we are interested in from the dataframe.
+
+```{r Selecting Data}
+df<- df %>% 
+  select(ï..eventid:city, success:targsubtype1_txt, gname, motive:weapsubtype1_txt, nkill:property, propextent_txt, propvalue)
+glimpse(df)
+```
+
+<br>
+
+Renaming Dataset Columns for More Clear & Descriptive Labels.
+
+```{r Renaming Data}
+df <- df %>%
+  rename(event_id = ï..eventid, year=iyear, month=imonth, day=iday, country=country_txt, region=region_txt, state=provstate, success_crimes=success, suicide_crimes=suicide, attack_type=attacktype1_txt, target_type=targtype1_txt, target_subtype=targsubtype1_txt, gang_name=gname, weapon_type=weaptype1_txt, weapon_subtype=weapsubtype1_txt, killed=nkill, wounded=nwound, estimated_property_range=propextent_txt, damaged_property_value=propvalue)
+
+glimpse(df)
+```
+
+<br>
+
+The first 5 rows of the dataset
+```{r First Five}
+head(df, 5)
+```
+
+<br>
+Looking at the structure of the data
+```{r Structure}
+str(df)
+```
+
+<br>
+
+### **Data Cleaning**
+During this process, we check for missing, duplicated, or irrelevant data in our dataset to increase the potential of high-quality analysis.
+
+<br>
+
+First, we check for any missing values
+```{r Check Null}
+colSums(is.na(df))
+```
+
+Replacing Null values with Zeros
+```{r Replace Null}
+df <- df%>%
+  mutate(killed = ifelse(is.na(killed), 0, killed)) %>%
+  mutate(wounded = ifelse(is.na(wounded), 0, wounded)) %>%
+  mutate(property = ifelse(is.na(property), 0, property))
+
+sum(is.na(df$killed))
+sum(is.na(df$wounded))
+sum(is.na(df$property))
+```
+
+<br>
+
+Checking whether there are any duplicated rows.
+```{r Check Duplicates} 
+sum(duplicated(df))
+``` 
+
+Dropping duplicates
+```{r Dropp Duplicates}
+df <- distinct(df)
+```
+
+<br> 
+Checking the values of both `month` and `day` columns.
+```{r Check Columns}
+unique(df$month)
+unique(df$day)
+```
+
+Eliminating rows that have 0 either in the month or day columns as they won't be relevant for the analyses.
+```{r Removث Zero}
+df <- df %>%
+  filter(month > 0, day > 0)
+```
+
+<br>
+
+Checking the Structure of the Cleaned Dataset.
+```{r Check Structure}
+str(df)
+```
+
+<br>
+
+We export the cleaned dataset as a CSV file to be further used in the visualization phase.
+```{r}
+write.csv(df, "Cleaned_df.csv", row.names = TRUE)
+```
+<br>
+
+
+
+
+### **Explanatory Data Analysis**
+
+_a. Total number of crimes for each country._
+```{r crimes_country}
+df %>%
+  group_by(country) %>%
+  count(country, sort=TRUE)
+```
+
+b. Total number of crimes for each region.
+```{r crimes_region}
+df %>%
+  group_by(region) %>%
+  count(region, sort=TRUE)
+```
+
+c. Total crimes by each gang. 
+```{r}
+df %>%
+  group_by(gang_name) %>%
+  summarize(Count = n()) %>%
+  arrange(desc(Count)) 
+```
+
+d. Total kills and wounds by each gang.
+```{r}
+df %>%
+  group_by(gang_name) %>%
+  summarize(Kills = sum(killed), Wounds = sum(wounded)) %>%
+  arrange(desc(Kills, Wounds))
+```
+
+e. Kills and wounds by each country.
+```{r}
+df %>%
+  group_by(country) %>%
+  summarize(Kills = sum(killed), Wounds = sum(wounded)) %>%
+  arrange(desc(Kills), desc(Wounds))
+```
+
+f. Hottest Years.
+```{r}
+df %>%
+  group_by(year) %>%
+  summarize(No_of_Crimes = n())%>%
+  arrange(desc(No_of_Crimes))
+
+```
+
+g. Number of crimes committed by a weapon type.
+```{r}
+df %>%
+  group_by(weapon_type) %>%
+  summarize(Crimes = n()) %>%
+  arrange(desc(Crimes))
+```
+
+h. Top targets.
+```{r}
+df %>%
+  group_by(target_type) %>%
+  summarize(Target = n()) %>%
+  arrange(desc(Target))
+```
+i. Top Sub-targets by attackers
+```{r}
+df %>%
+  group_by(target_subtype) %>%
+  summarize(Target_Subtype = n()) %>%
+  arrange(desc(Target_Subtype))
+```
+
+j. Most attack types committed.
+```{r}
+df %>%
+  group_by(attack_type) %>%
+  summarize(Count = n()) %>%
+  arrange(desc(Count))
+```
+
+k. Safest countries 
+```{r}
+df %>%
+  group_by(country) %>%
+  summarize(Crimes = n())%>%
+  arrange(Crimes)
+```
+
+l. Suicide crimes occurred in each country.
+```{r}
+df %>%
+  group_by(country) %>%
+  summarise(Crimes = sum(suicide_crimes)) %>%
+  arrange(desc(Crimes))
+
+```
+
+m. Estimated property damages for each country.
+```{r}
+df %>%
+  group_by(country) %>%
+  summarize(Total = mean(damaged_property_value)) %>%
+  mutate(Total = as.integer(Total)) %>%
+  arrange(desc(Total))
+```
+
+n. Classifying the range amount of damages.
+```{r}
+df %>%
+  group_by(estimated_property_range) %>%
+  filter(estimated_property_range != "") %>%
+  summarise(Total = n())%>%
+  arrange(desc(Total))
+
+```
+
+
+<br>
+
+### **Data Visualization is performed using Power BI**
+
+<br>
+<img src = powerbi_logo.png style="width:300px;" class="center">
